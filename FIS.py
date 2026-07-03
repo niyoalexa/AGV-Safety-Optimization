@@ -1,12 +1,5 @@
 # ============================================================
-# CELL A: ENHANCED FUZZY INFERENCE
-# Changes vs original:
-#   1. Vectorized trapmf (numpy arrays)
-#   2. Centroid (WA) defuzzification
-#   3. Extended rule base (12 rules: 5 HIGH / 5 MED / 2 LOW)
-#   4. Per-rule activation returned for interpretability
-#   5. Rule weights as tunable config parameters
-#   6. Third input renamed: p_col -> M (Motion Intensity)
+# FUZZY INFERENCE
 # ============================================================
 from dataclasses import dataclass, replace, field
 from typing import Tuple, Dict
