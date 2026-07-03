@@ -17,9 +17,9 @@ def trapmf_vec(x: np.ndarray, a: float, b: float, c: float, d: float) -> np.ndar
         mask = (x > c) & (x < d)
         out[mask] = (d - x[mask]) / (d - c)
     if a == b:
-        out[x <= a] = 1.0   # left shoulder
+        out[x < a] = 1.0   # left shoulder
     if c == d:
-        out[x >= d] = 1.0   # right shoulder
+        out[x > d] = 1.0   # right shoulder
     return out
 
 
@@ -197,8 +197,7 @@ print("Cell A loaded: Fuzzy3InConfigV2, fuzzy_infer_batch, apply_validity_gating
 
 # ============================================================
 # CELL B: SENSITIVITY ANALYSIS
-# One-at-a-time (OAT) and 2-D surface plots
-# Third input axis: Motion Intensity M (replaces p_col)
+# Third input axis: Motion Intensity M 
 # ============================================================
 import matplotlib
 import matplotlib.pyplot as plt
@@ -347,9 +346,7 @@ for name, fixed_arr, sweep_arr1, sweep_arr2 in [
 
 
 # ============================================================
-# CELL C: ROBUSTNESS EVALUATION
-# Tests: Gaussian noise sweep, threshold perturbation, rule-weight Monte Carlo
-# Third input renamed: p_vec -> M_vec
+# VALUATION
 # ============================================================
 matplotlib.rcParams.update({'figure.dpi': 130, 'font.size': 10})
 
