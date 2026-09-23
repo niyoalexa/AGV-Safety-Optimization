@@ -3,10 +3,10 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf                              
 from tensorflow.keras import layers, models         
-from sklearn.model_selection import train_test_split 
-#from sklearn.metrics import confusion_matrix         
+from sklearn.model_selection import train_test_split      
 from sklearn.metrics import classification_report 
 from tensorflow.keras.callbacks import LambdaCallback
+from tensorflow.keras import layers, models, backend as K
 from sklearn.metrics import mean_squared_error, r2_score
 from scipy.stats import pearsonr
 import seaborn as sns                                
@@ -14,8 +14,6 @@ import matplotlib.pyplot as plt
 import os
 
 
-
-os.environ['TF_XLA_FLAGS'] = '--tf_xla_auto_jit=2'
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
     try:
@@ -62,8 +60,8 @@ def prepare_physical_targets(X_data):
     """
     Derives normalized targets [0, 1] from the sequence data.
     """
-    current_scans = X_data[:, -1, :, 0]  # Shape: (Samples, 1351)
-    first_scans = X_data[:, 0, :, 0]     # Shape: (Samples, 1351)
+    current_scans = X_data[:, -1, :, 0]  
+    first_scans = X_data[:, 0, :, 0]     
     num_beams = current_scans.shape[1] 
 
     deadzone_threshold = 500.0 / 3500.0
@@ -91,7 +89,7 @@ split_idx = int(len(X_all) * 0.8)
 X_train, X_test = X_all[:split_idx], X_all[split_idx:]
 y_train_phys, y_test_phys = y_phys_all[:split_idx], y_phys_all[split_idx:]
 
-def build_fuzzy_extractor(window_size=50, num_angles=1351):
+def build_model_extractor(window_size=50, num_angles=1351):
     K.clear_session()
     
     inputs = layers.Input(shape=(window_size, num_angles, 1))
@@ -130,19 +128,17 @@ def build_fuzzy_extractor(window_size=50, num_angles=1351):
 
     return model
 
-model = build_fuzzy_extractor()
+model = build_model_extractor()
 model.summary()
-
 
 clean_log = LambdaCallback(
     on_epoch_end=lambda epoch, logs: print(
-        f" Epoch {epoch+1:02d} | Train Loss: {logs['loss']:.6f} | Val Loss: {logs['val_loss']:.6f}"
+        f" Epoch {epoch+1:02d} | "
+        f"Train Loss: {logs['loss']:.6f} | "
+        f"Val Loss: {logs['val_loss']:.6f}"
     )
 )
 
-model = build_fuzzy_extractor()
-
-print("\n--- Starting Stabilized Training Protocol ---")
 history = model.fit(
     X_train,
     {
@@ -150,17 +146,19 @@ history = model.fit(
         'index': y_train_phys[:, 1],
         'motion': y_train_phys[:, 2]
     },
-    validation_data=(X_test, {
-        'distance': y_test_phys[:, 0],
-        'index': y_test_phys[:, 1],
-        'motion': y_test_phys[:, 2]
-    }),
+    validation_data=(
+        X_test,
+        {
+            'distance': y_test_phys[:, 0],
+            'index': y_test_phys[:, 1],
+            'motion': y_test_phys[:, 2]
+        }
+    ),
     epochs=50,
-    batch_size=16,
+    batch_size=8,
     verbose=1,
-    callbacks=[clean_log] 
+    callbacks=[clean_log]
 )
-
 
 model.save('final_production_model.keras')
 print("\nSuccess! Model saved as 'final_production_model.keras'")
@@ -168,9 +166,9 @@ print("\nSuccess! Model saved as 'final_production_model.keras'")
 raw_preds = model.predict(X_test, batch_size=16, verbose=0)
 
 predictions = np.column_stack([
-    raw_preds[0].flatten(),   # Distance
-    raw_preds[1].flatten(),   # Index
-    raw_preds[2].flatten()    # Motion
+    raw_preds[0].flatten(),   
+    raw_preds[1].flatten(),   
+    raw_preds[2].flatten()    
 ])
 
 actuals = y_test_phys
@@ -178,7 +176,7 @@ actuals = y_test_phys
 names = ["Distance", "Index", "Motion"]
 
 print(f"\nFinal Check - Sample 1 Target (Normalized):")
-print(f"Distance: {y_test_phys[-1][0]:.6f}")  # [-1] or [104] correspond to 105 last sample
+print(f"Distance: {y_test_phys[-1][0]:.6f}")  
 print(f"Location: {y_test_phys[-1][1]:.6f}")
 print(f"Motion:   {y_test_phys[-1][2]:.6f}")
 
@@ -208,4 +206,3 @@ print(f"Overall MSE : {overall_mse:.6f}")
 print(f"Overall R²  : {overall_r2*100:.2f}%")
 print(f"Parameters  : {model.count_params():,}")
 print("="*75)
-
