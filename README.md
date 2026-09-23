@@ -1,7 +1,6 @@
 # TUAI - Lightweight Model for Collision Avoidance of AGVs in Crowded Environments
 
-The full dataset for this project is here: https://drive.google.com/file/d/1qRU4nztZGTpZCerNhJOYLJNiSKmFF6qm/view?usp=drive_link
-
+The full dataset for this project is here: https://docs.google.com/spreadsheets/d/13p_WmtpC4UyYIl6EvDNXvy2WA85gNDZD/edit?usp=drive_link&ouid=112168522408400151631&rtpof=true&sd=true
 ## Preprocessing pipeline:
 - Reads lidar_data.csv 
 - Feature extraction: uses the LiDAR distance columns  as the feature vector for each scan.
